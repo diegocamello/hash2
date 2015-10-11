@@ -1,0 +1,121 @@
+#include <stdio.h>
+#include "lista_dinamica.h"
+#include <string.h>
+#define m 701
+
+void inicializar_arreglo(Lista *datos[m])
+{
+	int x;
+	for(x=0; x<m; x++)
+	{
+		datos[x]=NULL;
+	}
+}
+long int potencia(int base,int potencia)
+{
+	long int resultado;
+	int contador;
+	resultado=1;
+	contador=0;
+	while (contador<potencia)
+	{
+		resultado=resultado*base;
+		contador=contador+1;
+	}
+	return(resultado);
+}
+int hash(char *texto)
+{
+	int tamano,x,y;
+	long int k;
+	tamano = strlen(texto);
+	if(tamano>7 ||tamano<1) return (-1);               //Error porque es una potencia muy grande para la funciÃ³n
+	y=tamano-1;
+	k=0;
+	for(x=0;x<tamano;x++)
+	{
+		k=k+(texto[x]*potencia(256,y));
+		y--;
+	}
+	return (k%m);
+}
+void guarda_enArchivo(int insercion,int colision)
+{
+	FILE *archivo;
+	archivo = fopen("estadisticas.csv","r");
+	if(archivo==NULL)
+	{
+		archivo = fopen("estadisticas.csv","a");
+		//fprintf(archivo,"inserciÃ³n,colisiones\n");//Para el Libreoffice Calc
+		fprintf(archivo,"insercion; longitud-lista\n");//para Microsoft Excel
+	}
+	fclose(archivo);
+	archivo = fopen("estadisticas.csv","a");
+	//fprintf(archivo,"%i,%i\n",insercion,colision);//Para el Libreoffice Calc
+	fprintf(archivo,"%i; %i\n",insercion,colision);//para Microsoft Excel
+	fclose(archivo);
+}
+void insertar_hash(Lista *datos[m], char *elementos, int insercion)
+{
+	int posicion,colision;
+	posicion = hash(elementos);
+	if (posicion>0)
+	{
+		datos[posicion] = inicializar_lista(datos[posicion]);
+		colision=insertar_registro(datos[posicion],elementos);
+		guarda_enArchivo(insercion,colision);
+	}
+}
+void imprimir(Lista *datos[m])
+{
+	int x;
+	printf("Arreglo de listas\n");
+	for(x=0; x<m; x++)
+	{
+		printf("[%i]",x);
+		imprimir_Lista(datos[x]);
+	}
+}
+void buscar(Lista *datos[m],char *texto)
+{
+	int posicion,posicion_lista;
+	posicion = hash(texto);
+	printf("\n");
+	printf("Buscando \"%s\"\n",texto);
+	if(datos[posicion]!=NULL)
+	{
+		posicion_lista=buscar_lista(datos[posicion],texto);
+		if(posicion_lista>=0)
+		{
+			printf("El dato esta en la lista Num. %i\n",posicion);
+			printf("La ubicacion en la lista es Pos. %i\n",posicion_lista);
+		}
+		else
+		{
+			printf("El dato no existe\n");
+		}
+	}
+	else
+	{
+		printf("El dato no existe\n");
+	}
+}
+int main()
+{
+	Lista *datos[m];
+	inicializar_arreglo(datos);
+	int x;
+	char texto[3];
+	for(x=0;x<2000;x++)
+	{
+		sprintf(texto,"%i",x);
+		insertar_hash(datos,texto,x+1);
+	}
+	imprimir(datos);
+	system("pause");
+	buscar(datos,"casa");
+	buscar(datos,"287");
+	system("pause");
+	return 0;
+	system("pause");
+}
